@@ -7,7 +7,7 @@ import { Mic, MicOff, Headphones, HeadphoneOff, LogOut } from 'lucide-react';
 
 import { ROUTES } from '@/shared/constants';
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from '../ui';
-import { useSounds } from '@/shared/hooks';
+import { useSounds, useMicroStatus } from '@/shared/hooks';
 
 interface Props {
   className?: string;
@@ -16,6 +16,7 @@ interface Props {
 export const RoomControlPanel: React.FC<Props> = ({ className }) => {
   const router = useRouter();
   const { play } = useSounds();
+  const { status } = useMicroStatus();
 
   const [isMicroOn, setIsMicroOn] = React.useState(true);
   const [isHeadphonesOn, setIsHeadphonesOn] = React.useState(true);
@@ -32,7 +33,7 @@ export const RoomControlPanel: React.FC<Props> = ({ className }) => {
 
   const handleToggleHeadphones = () => {
     setIsHeadphonesOn((prev) => !prev);
-    setIsMicroOn(isHeadphonesOn ? false : true);
+    setIsMicroOn((prev) => (isHeadphonesOn ? false : prev));
 
     if (isHeadphonesOn) {
       play('mute');
@@ -40,6 +41,12 @@ export const RoomControlPanel: React.FC<Props> = ({ className }) => {
       play('unmute');
     }
   };
+
+  React.useEffect(() => {
+    if (status === 'denied') {
+      setIsMicroOn(false);
+    }
+  }, [status]);
 
   return (
     <div
@@ -52,7 +59,8 @@ export const RoomControlPanel: React.FC<Props> = ({ className }) => {
           <Button
             className='w-10 h-10'
             variant={isMicroOn ? 'secondary' : 'default'}
-            onClick={handleToggleMicro}>
+            onClick={handleToggleMicro}
+            disabled={status === 'unknown' || status === 'denied'}>
             {isMicroOn ? <Mic /> : <MicOff />}
           </Button>
         </TooltipTrigger>

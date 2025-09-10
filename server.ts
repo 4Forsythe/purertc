@@ -1,6 +1,8 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 
+import SimplePeer from 'simple-peer';
+
 import 'dotenv/config';
 
 const port = Number(process.env.PORT) || 3001;
@@ -12,6 +14,13 @@ const io = new Server(server, {
 });
 
 const rooms: Record<string, string> = {};
+
+type SocketCallParams = {
+  callerId: string;
+  targetId: string;
+  roomId: string;
+  signal: SimplePeer.SignalData;
+};
 
 io.on('connection', (socket) => {
   console.log('Socket connect', socket.id);
@@ -29,6 +38,26 @@ io.on('connection', (socket) => {
         .map((socketId) => socketId)
     );
   });
+
+  socket.on(
+    'room:call',
+    ({ callerId, targetId, roomId, signal }: SocketCallParams) => {
+      console.log('Поступил звонок от пользователя', callerId);
+      socket.broadcast
+        .to(`room:${roomId}`)
+        .emit('room:called', { callerId, targetId, signal });
+    }
+  );
+
+  socket.on(
+    'room:answer',
+    ({ callerId, targetId, roomId, signal }: SocketCallParams) => {
+      console.log('Пришел ответ от пользователя', targetId);
+      socket.broadcast
+        .to(`room:${roomId}`)
+        .emit('room:answered', { callerId, targetId, signal });
+    }
+  );
 
   socket.on(
     'room:message',

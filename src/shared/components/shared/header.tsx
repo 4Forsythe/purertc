@@ -17,13 +17,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '../ui';
-import { ThemeToggleButton } from './theme-toggle-button';
 import { CopyButton } from './copy-button';
+import { ThemeToggleButton } from './theme-toggle-button';
+
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL as string;
 
 export const Header: React.FC = () => {
   const pathname = usePathname();
 
   const roomId = pathname.split('/').at(-1);
+
+  const fullUrl = BASE_URL.endsWith('/')
+    ? BASE_URL.slice(0, -1) + pathname
+    : BASE_URL + pathname;
 
   return (
     <Container className='w-full flex-none'>
@@ -65,7 +71,7 @@ export const Header: React.FC = () => {
                         </CopyButton>
                       </div>
                     )}
-                    {typeof window !== 'undefined' && (
+                    {fullUrl && (
                       <div className='grid gap-3'>
                         <span className='text-sm text-accent-foreground'>
                           URL
@@ -73,8 +79,8 @@ export const Header: React.FC = () => {
                         <CopyButton
                           className='text-muted-foreground'
                           variant='outline'
-                          clipboard={window.location.href}>
-                          {window.location.href}
+                          clipboard={fullUrl}>
+                          {fullUrl}
                         </CopyButton>
                       </div>
                     )}
